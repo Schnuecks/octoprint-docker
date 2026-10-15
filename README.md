@@ -1,4 +1,4 @@
-> **Fork notice:** this fork builds the main image on **Python 3.12 (Debian bookworm)** instead of the
+> **Fork notice:** this fork builds the main image on **Python 3.13 (Debian 13 trixie)** instead of the
 > end-of-life Python 3.10 used upstream, and publishes it to `ghcr.io/schnuecks/octoprint` via GitHub Actions
 > (latest stable OctoPrint release, weekly rebuild). Everything else is unchanged.
 

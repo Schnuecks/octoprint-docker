@@ -1,4 +1,4 @@
-ARG PYTHON_BASE_IMAGE=3.12-slim-bookworm
+ARG PYTHON_BASE_IMAGE=3.13-slim-trixie
 
 FROM ubuntu AS s6build
 ARG S6_RELEASE
