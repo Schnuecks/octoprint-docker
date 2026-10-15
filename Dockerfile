@@ -2,20 +2,24 @@ ARG PYTHON_BASE_IMAGE=3.12-slim-bookworm
 
 FROM ubuntu AS s6build
 ARG S6_RELEASE
-ENV S6_VERSION ${S6_RELEASE:-v2.1.0.0}
+ENV S6_VERSION ${S6_RELEASE:-v3.2.3.2}
 RUN apt-get update && apt-get install -y curl
 RUN echo "$(dpkg --print-architecture)"
 WORKDIR /tmp
+# s6-overlay v3: one noarch tarball, one per-architecture tarball and the two
+# "symlinks" tarballs that keep the classic /usr/bin/with-contenv & co. paths
 RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
   && case "${dpkgArch##*-}" in \
-  amd64) ARCH='amd64';; \
+  amd64) ARCH='x86_64';; \
   arm64) ARCH='aarch64';; \
   armhf) ARCH='armhf';; \
   *) echo "unsupported architecture: $(dpkg --print-architecture)"; exit 1 ;; \
   esac \
   && set -ex \
   && echo $S6_VERSION \
-  && curl -fsSLO "https://github.com/just-containers/s6-overlay/releases/download/$S6_VERSION/s6-overlay-$ARCH.tar.gz"
+  && for f in s6-overlay-noarch s6-overlay-$ARCH s6-overlay-symlinks-noarch s6-overlay-symlinks-arch; do \
+       curl -fsSLO "https://github.com/just-containers/s6-overlay/releases/download/$S6_VERSION/$f.tar.xz"; \
+     done
 
 
 FROM python:${PYTHON_BASE_IMAGE} AS build
@@ -47,12 +51,16 @@ RUN apt-get update && apt-get install -y \
   zlib1g-dev \
   x265
 
-# unpack s6 (--keep-directory-symlink: bookworm has a merged /usr, i.e. /bin is a symlink to
-# /usr/bin; the s6-overlay v2 tarball would replace that symlink with a bare directory and
-# thereby remove /bin/sh, after which every RUN fails with exit code 1 and no output)
+# unpack s6-overlay v3 (handles the merged /usr of Debian bookworm; the v2 tarball
+# replaced the /bin symlink and broke /bin/sh)
 COPY --from=s6build /tmp /tmp
-RUN s6tar=$(find /tmp -name "s6-overlay-*.tar.gz") \
-  && tar xzf $s6tar -C / --keep-directory-symlink
+RUN cd /tmp \
+  && tar -C / -Jxpf s6-overlay-noarch.tar.xz \
+  && tar -C / -Jxpf "$(ls s6-overlay-*.tar.xz | grep -vE 'noarch|symlinks')" \
+  && tar -C / -Jxpf s6-overlay-symlinks-noarch.tar.xz \
+  && tar -C / -Jxpf s6-overlay-symlinks-arch.tar.xz \
+  && rm -f s6-overlay-*.tar.xz \
+  && test -x /init && test -x /usr/bin/with-contenv
 
 # Install octoprint (the source archive is fetched by BuildKit itself, so a wrong
 # version shows up as a clear download error instead of a silent curl failure)
