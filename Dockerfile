@@ -47,10 +47,12 @@ RUN apt-get update && apt-get install -y \
   zlib1g-dev \
   x265
 
-# unpack s6
+# unpack s6 (--keep-directory-symlink: bookworm has a merged /usr, i.e. /bin is a symlink to
+# /usr/bin; the s6-overlay v2 tarball would replace that symlink with a bare directory and
+# thereby remove /bin/sh, after which every RUN fails with exit code 1 and no output)
 COPY --from=s6build /tmp /tmp
 RUN s6tar=$(find /tmp -name "s6-overlay-*.tar.gz") \
-  && tar xzf $s6tar -C / 
+  && tar xzf $s6tar -C / --keep-directory-symlink
 
 # Install octoprint (the source archive is fetched by BuildKit itself, so a wrong
 # version shows up as a clear download error instead of a silent curl failure)
