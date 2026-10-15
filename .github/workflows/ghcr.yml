@@ -26,19 +26,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Get latest stable OctoPrint release
-        id: latest
-        uses: pozetroninc/github-action-get-latest-release@master
-        with:
-          owner: OctoPrint
-          repo: OctoPrint
-          excludes: prerelease,draft
-
       - name: Pick OctoPrint version
         id: version
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           ref="${{ github.event.inputs.octoprint_ref }}"
-          [ -n "$ref" ] || ref="${{ steps.latest.outputs.release }}"
+          if [ -z "$ref" ]; then
+            # latest stable release (no prereleases, no drafts)
+            ref=$(gh api repos/OctoPrint/OctoPrint/releases/latest --jq .tag_name)
+          fi
+          [ -n "$ref" ] || { echo "could not determine OctoPrint version"; exit 1; }
           echo "ref=$ref" >> "$GITHUB_OUTPUT"
           echo "Building OctoPrint $ref"
 
