@@ -1,4 +1,4 @@
-ARG PYTHON_BASE_IMAGE=3-slim-buster
+ARG PYTHON_BASE_IMAGE=3.12-slim-bookworm
 
 FROM python:${PYTHON_BASE_IMAGE} AS build
 

@@ -1,0 +1,79 @@
+name: Publish to GHCR
+
+# Builds the main image for the latest stable OctoPrint release and pushes it to
+# ghcr.io/<owner>/octoprint. Runs on pushes to master, weekly (to pick up new
+# OctoPrint releases) and on demand.
+on:
+  push:
+    branches:
+      - master
+  schedule:
+    - cron: "17 4 * * 1"
+  workflow_dispatch:
+    inputs:
+      octoprint_ref:
+        description: "OctoPrint tag to build (empty = latest stable release)"
+        required: false
+        default: ""
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Get latest stable OctoPrint release
+        id: latest
+        uses: pozetroninc/github-action-get-latest-release@master
+        with:
+          owner: OctoPrint
+          repo: OctoPrint
+          excludes: prerelease,draft
+
+      - name: Pick OctoPrint version
+        id: version
+        run: |
+          ref="${{ github.event.inputs.octoprint_ref }}"
+          [ -n "$ref" ] || ref="${{ steps.latest.outputs.release }}"
+          echo "ref=$ref" >> "$GITHUB_OUTPUT"
+          echo "Building OctoPrint $ref"
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@v3
+        with:
+          platforms: arm64
+
+      - name: Set up Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GHCR
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Image name (lowercase owner)
+        id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/octoprint" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          push: true
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            octoprint_ref=${{ steps.version.outputs.ref }}
+          tags: |
+            ${{ steps.image.outputs.name }}:${{ steps.version.outputs.ref }}
+            ${{ steps.image.outputs.name }}:latest
+          labels: |
+            org.opencontainers.image.version=${{ steps.version.outputs.ref }}
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

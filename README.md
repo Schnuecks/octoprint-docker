@@ -1,3 +1,7 @@
+> **Fork notice:** this fork builds the main image on **Python 3.12 (Debian bookworm)** instead of the
+> end-of-life Python 3.10 used upstream, and publishes it to `ghcr.io/schnuecks/octoprint` via GitHub Actions
+> (latest stable OctoPrint release, weekly rebuild). Everything else is unchanged.
+
 # OctoPrint-docker [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.octoprint.org)
 
 This is the primary image of `octoprint/octoprint`. It is designed to work similarly, and support the same out of the box features as the octopi raspberry-pi machine image, using docker.
