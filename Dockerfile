@@ -52,11 +52,13 @@ COPY --from=s6build /tmp /tmp
 RUN s6tar=$(find /tmp -name "s6-overlay-*.tar.gz") \
   && tar xzf $s6tar -C / 
 
-# Install octoprint
-RUN	curl -fsSLO --compressed --retry 3 --retry-delay 10 \
-  https://github.com/OctoPrint/OctoPrint/archive/${octoprint_ref}.tar.gz \
-	&& mkdir -p /opt/octoprint \
-  && tar xzf ${octoprint_ref}.tar.gz --strip-components 1 -C /opt/octoprint --no-same-owner
+# Install octoprint (the source archive is fetched by BuildKit itself, so a wrong
+# version shows up as a clear download error instead of a silent curl failure)
+RUN echo "Building OctoPrint ${octoprint_ref}"
+ADD https://github.com/OctoPrint/OctoPrint/archive/${octoprint_ref}.tar.gz /tmp/octoprint.tar.gz
+RUN mkdir -p /opt/octoprint \
+  && tar xzf /tmp/octoprint.tar.gz --strip-components 1 -C /opt/octoprint --no-same-owner \
+  && rm /tmp/octoprint.tar.gz
 
 WORKDIR /opt/octoprint
 RUN pip install .
