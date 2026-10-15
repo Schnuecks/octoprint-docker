@@ -87,6 +87,8 @@ RUN make install
 
 # Copy services into s6 servicedir and set default ENV vars
 COPY root /
+# s6-overlay v3 executes these scripts directly, so they must be executable
+RUN chmod +x /etc/cont-init.d/* /etc/services.d/*/run
 ENV CAMERA_DEV /dev/video0
 ENV MJPG_STREAMER_INPUT -n -r 640x480
 ENV PIP_USER true
