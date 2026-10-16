@@ -1,8 +1,57 @@
-> **Fork notice:** this fork builds the main image on **Python 3.13 (Debian 13 trixie)** instead of the
-> end-of-life Python 3.10 used upstream, and publishes it to `ghcr.io/schnuecks/octoprint` via GitHub Actions
-> (latest stable OctoPrint release, weekly rebuild). Everything else is unchanged.
+# OctoPrint-docker – Python 3.13 fork
 
-# OctoPrint-docker [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.octoprint.org)
+[![Publish to GHCR](https://github.com/Schnuecks/octoprint-docker/actions/workflows/ghcr.yml/badge.svg)](https://github.com/Schnuecks/octoprint-docker/actions/workflows/ghcr.yml)
+![Python 3.13](https://img.shields.io/badge/python-3.13-3776ab)
+![Debian 13 trixie](https://img.shields.io/badge/debian-13%20trixie-a81d33)
+![s6-overlay v3](https://img.shields.io/badge/s6--overlay-v3.2-555)
+
+> [!IMPORTANT]
+> **This is an unofficial fork of [OctoPrint/octoprint-docker](https://github.com/OctoPrint/octoprint-docker).**
+> The upstream image `octoprint/octoprint` still runs on Python 3.10, which reached end of life. This fork
+> rebuilds the main image on a current base and publishes it as **`ghcr.io/schnuecks/octoprint`**.
+> It is not affiliated with the OctoPrint project – please report issues with this image here, not upstream.
+
+```shell
+docker pull ghcr.io/schnuecks/octoprint:latest
+```
+
+To use it with the included [docker-compose.yml](docker-compose.yml) (or the `docker run` example further down),
+replace `octoprint/octoprint` with `ghcr.io/schnuecks/octoprint:latest`. Existing `octoprint` volumes keep working.
+
+### What this fork changes
+
+| Area | Upstream | This fork |
+| --- | --- | --- |
+| Base image | `python:3.10-slim-bullseye` (Debian 11) | `python:3.13-slim-trixie` (Debian 13) |
+| Process supervisor | s6-overlay v2.1 | s6-overlay v3.2 – v2 breaks on the merged `/usr` of current Debian (it replaced the `/bin` symlink and with it `/bin/sh`) |
+| OctoPrint source | downloaded with `curl` in a `RUN` step | fetched with `ADD`, so a wrong version fails the build with a clear error |
+| Init and service scripts | – | marked executable, which s6-overlay v3 requires |
+| Restart command | `s6-svc -r /var/run/s6/services/octoprint` | `s6-svc -r /run/service/octoprint` (service path of s6-overlay v3) |
+| CI / registry | Docker Hub, triggered by OctoPrint releases | GitHub Actions → GHCR, see below |
+| Minimal image | `python:3-slim-buster` | base bumped to `3.13-slim-trixie`, but **not built or published** |
+
+OctoPrint itself, mjpg-streamer, the environment variables, volumes and ports are the same as upstream.
+
+### Published image
+
+- **Registry:** `ghcr.io/schnuecks/octoprint`
+- **Tags:** `latest` and the OctoPrint version, e.g. `1.11.8` – always the latest *stable* OctoPrint release
+- **Platforms:** `linux/amd64`, `linux/arm64` (no `arm/v7`)
+- **Builds:** on every push to `master`, every Monday at 04:17 UTC (picks up new OctoPrint releases and base
+  image updates) and manually via *Run workflow*, optionally for a specific OctoPrint tag
+- Not published: `edge`, `canary`, `bleeding`, `X` / `X.Y` and the `*-minimal` tags
+
+> [!NOTE]
+> If your OctoPrint settings still contain the old restart command
+> `s6-svc -r /var/run/s6/services/octoprint`, change it under *Settings → Server → Restart OctoPrint* to
+> `s6-svc -r /run/service/octoprint`, otherwise restarting from the web interface fails.
+
+Everything below is the original upstream README. Where it mentions `octoprint/octoprint`, Docker Hub, tags or
+platforms, it describes the upstream image.
+
+---
+
+## OctoPrint-docker (upstream README) [![Chat](https://img.shields.io/badge/chat-on%20discord-7289da.svg)](https://discord.octoprint.org)
 
 This is the primary image of `octoprint/octoprint`. It is designed to work similarly, and support the same out of the box features as the octopi raspberry-pi machine image, using docker.
 
@@ -26,7 +75,7 @@ All images for the `octoprint/octoprint` image are multi-arch images, and we pub
 
 **Table of Contents**
 
-- [OctoPrint-docker ](#octoprint-docker-)
+- [OctoPrint-docker (upstream README)](#octoprint-docker-upstream-readme-)
   - [Usage](#usage)
     - [Configuration](#configuration)
       - [Enabling Webcam Support with Docker](#enabling-webcam-support-with-docker)
@@ -103,7 +152,7 @@ Within the container the MJPG port will start at 8080 and increment for each dev
 Whilst the container should be pre-configured to allow for OctoPrint to be restarted within the container, there are still some edge cases where this pre-configuration does not take effect. If the option to restart OctopPrint is not present in the user interface, ensure the following command is present in the `Restart OctoPrint` field under the Server section of the OctoPrint Settings.
 
 ```shell
-s6-svc -r /var/run/s6/services/octoprint
+s6-svc -r /run/service/octoprint
 ```
 
 #### Editing Config files manually
