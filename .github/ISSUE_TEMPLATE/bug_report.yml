@@ -1,0 +1,46 @@
+name: Problem with the image
+description: Something does not work with ghcr.io/schnuecks/octoprint
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This is for problems with **this fork's image** (`ghcr.io/schnuecks/octoprint`), e.g. the container
+        does not start, a service fails or something behaves differently than in the upstream image.
+        Problems with OctoPrint itself or its plugins belong to the [OctoPrint community](https://community.octoprint.org).
+  - type: textarea
+    id: problem
+    attributes:
+      label: What happens?
+      description: What did you do, what did you expect and what happened instead?
+    validations:
+      required: true
+  - type: input
+    id: image
+    attributes:
+      label: Image version and build date
+      description: "Output of `docker inspect --format '{{ index .Config.Labels \"org.opencontainers.image.version\" }} {{ .Created }}' ghcr.io/schnuecks/octoprint:latest`"
+    validations:
+      required: true
+  - type: dropdown
+    id: platform
+    attributes:
+      label: Platform
+      options:
+        - amd64
+        - arm64
+    validations:
+      required: true
+  - type: textarea
+    id: setup
+    attributes:
+      label: docker-compose.yml or docker run command
+      render: yaml
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Container log
+      description: Output of `docker logs <container>` around the problem
+      render: text

@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Questions about OctoPrint itself
+    url: https://community.octoprint.org
+    about: Usage, plugins and printer questions go to the OctoPrint community forum.
