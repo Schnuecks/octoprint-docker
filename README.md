@@ -37,8 +37,9 @@ OctoPrint itself, mjpg-streamer, the environment variables, volumes and ports ar
 - **Registry:** `ghcr.io/schnuecks/octoprint`
 - **Tags:** `latest` and the OctoPrint version, e.g. `1.11.8` – always the latest *stable* OctoPrint release
 - **Platforms:** `linux/amd64`, `linux/arm64` (no `arm/v7`)
-- **Builds:** on every push to `master`, every Monday at 04:17 UTC (picks up new OctoPrint releases and base
-  image updates) and manually via *Run workflow*, optionally for a specific OctoPrint tag
+- **Builds:** on every push to `master`, on the 1st of every month at 04:17 UTC (full rebuild without cache,
+  picks up base image and security updates), every Monday at 04:17 UTC only if a new OctoPrint release is not
+  yet published, and manually via *Run workflow*, optionally for a specific OctoPrint tag
 - Not published: `edge`, `canary`, `bleeding`, `X` / `X.Y` and the `*-minimal` tags
 
 > [!NOTE]
