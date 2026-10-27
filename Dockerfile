@@ -25,7 +25,7 @@ RUN ARCH= && dpkgArch="$(dpkg --print-architecture)" \
 FROM python:${PYTHON_BASE_IMAGE} AS build
 
 ARG octoprint_ref
-ENV octoprint_ref ${octoprint_ref:-master}
+ENV octoprint_ref=${octoprint_ref:-master}
 
 RUN apt-get update && apt-get install -y \
   avrdude \
@@ -89,11 +89,11 @@ RUN make install
 COPY root /
 # s6-overlay v3 executes these scripts directly, so they must be executable
 RUN chmod +x /etc/cont-init.d/* /etc/services.d/*/run
-ENV CAMERA_DEV /dev/video0
-ENV MJPG_STREAMER_INPUT -n -r 640x480
-ENV PIP_USER true
-ENV PYTHONUSERBASE /octoprint/plugins
-ENV PATH "${PYTHONUSERBASE}/bin:${PATH}"
+ENV CAMERA_DEV=/dev/video0
+ENV MJPG_STREAMER_INPUT="-n -r 640x480"
+ENV PIP_USER=true
+ENV PYTHONUSERBASE=/octoprint/plugins
+ENV PATH="${PYTHONUSERBASE}/bin:${PATH}"
 # set WORKDIR 
 WORKDIR /octoprint
 
