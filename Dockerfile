@@ -2,7 +2,7 @@ ARG PYTHON_BASE_IMAGE=3.13-slim-trixie
 
 FROM ubuntu AS s6build
 ARG S6_RELEASE
-ENV S6_VERSION ${S6_RELEASE:-v3.2.3.2}
+ENV S6_VERSION=${S6_RELEASE:-v3.2.3.2}
 RUN apt-get update && apt-get install -y curl
 RUN echo "$(dpkg --print-architecture)"
 WORKDIR /tmp
